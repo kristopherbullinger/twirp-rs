@@ -28,7 +28,7 @@ impl ServiceGenerator {
     /// rust versions prior to 1.75 which do not support async fns in traits.
     ///
     /// This value is set to true by default.
-    pub fn async_trait_shim(mut Box<Self>, async_trait_shim: bool) -> Box<ServiceGenerator> {
+    pub fn async_trait_shim(mut self: Box<Self>, async_trait_shim: bool) -> Box<ServiceGenerator> {
         self.async_trait_shim = async_trait_shim;
         self
     }
