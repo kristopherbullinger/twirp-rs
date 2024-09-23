@@ -54,7 +54,7 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
         for m in &service.methods {
             writeln!(
                 buf,
-                "    async fn {}(&self, ctx: twirp::Context, req: {}) -> Result<{}, twirp::TwirpErrorResponse>;",
+                "    fn {}(&self, ctx: twirp::Context, req: {}) -> impl std::future::Future<Result<{}, twirp::TwirpErrorResponse>> + Send + Sync;",
                 m.name, m.input_type, m.output_type,
             )
             .unwrap();
@@ -71,11 +71,11 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
         for m in &service.methods {
             writeln!(
                 buf,
-                "    async fn {}(&self, ctx: twirp::Context, req: {}) -> Result<{}, twirp::TwirpErrorResponse> {{",
+                "    fn {}(&self, ctx: twirp::Context, req: {}) -> impl std::future::Future<Output=Result<{}, twirp::TwirpErrorResponse>> + Send + Sync {{",
                 m.name, m.input_type, m.output_type,
             )
                 .unwrap();
-            writeln!(buf, "        (*self).{}(ctx, req).await", m.name).unwrap();
+            writeln!(buf, "        (*self).{}(ctx, req)", m.name).unwrap();
             writeln!(buf, "    }}").unwrap();
         }
         writeln!(buf, "}}").unwrap();
@@ -126,7 +126,7 @@ where
             // Define: <METHOD>
             writeln!(
                 buf,
-                "    async fn {}(&self, req: {}) -> Result<{}, twirp::ClientError>;",
+                "    fn {}(&self, req: {}) -> impl std::future::Future<Result<{}, twirp::ClientError>> + Send + Sync;",
                 m.name, m.input_type, m.output_type,
             )
             .unwrap();
@@ -146,13 +146,13 @@ where
             // Define the rpc `<METHOD>`
             writeln!(
                 buf,
-                "    async fn {}(&self, req: {}) -> Result<{}, twirp::ClientError> {{",
+                "    fn {}(&self, req: {}) -> impl std::future::Future<Result<{}, twirp::ClientError>> + Send + Sync {{",
                 m.name, m.input_type, m.output_type,
             )
             .unwrap();
             writeln!(
                 buf,
-                r#"    self.request("{}/{}", req).await"#,
+                r#"    self.request("{}/{}", req)"#,
                 service_fqn, m.proto_name
             )
             .unwrap();
