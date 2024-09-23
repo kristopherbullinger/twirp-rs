@@ -8,10 +8,31 @@ use std::fmt::Write;
 /// Add a call to `.service_generator(twirp_build::service_generator())` in
 /// main() of `build.rs`.
 pub fn service_generator() -> Box<ServiceGenerator> {
-    Box::new(ServiceGenerator {})
+    Box::new(ServiceGenerator {
+        async_trait_shim: true,
+    })
 }
 
-pub struct ServiceGenerator;
+pub struct ServiceGenerator {
+    /// Whether the Service Generator should add the `#[async_trait::async_trait]` 
+    /// attribute to generated traits and implementations. Useful for supporting 
+    /// rust versions prior to 1.75 which do not support async fns in traits.
+    ///
+    /// This value is set to true by default.
+    async_trait_shim: bool,
+}
+
+impl ServiceGenerator {
+    /// Whether the Service Generator should add the `#[async_trait::async_trait]` 
+    /// attribute to generated traits and implementations. Useful for supporting 
+    /// rust versions prior to 1.75 which do not support async fns in traits.
+    ///
+    /// This value is set to true by default.
+    pub fn async_trait_shim(mut self, async_trait_shim: bool) -> ServiceGenerator {
+        self.async_trait_shim = async_trait_shim;
+        self
+    }
+}
 
 impl prost_build::ServiceGenerator for ServiceGenerator {
     fn generate(&mut self, service: prost_build::Service, buf: &mut String) {
@@ -26,7 +47,9 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
         //
         // generate the twirp server
         //
-        writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        if self.async_trait_shim {
+            writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        }
         writeln!(buf, "pub trait {} {{", service_name).unwrap();
         for m in &service.methods {
             writeln!(
@@ -38,7 +61,9 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
         }
         writeln!(buf, "}}").unwrap();
 
-        writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        if self.async_trait_shim {
+            writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        }
         writeln!(buf, "impl<T> {service_name} for std::sync::Arc<T>").unwrap();
         writeln!(buf, "where").unwrap();
         writeln!(buf, "    T: {service_name} + Sync + Send").unwrap();
@@ -89,7 +114,9 @@ where
         // generate the twirp client
         //
         writeln!(buf).unwrap();
-        writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        if self.async_trait_shim {
+            writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        }
         writeln!(
             buf,
             "pub trait {service_name}Client: Send + Sync + std::fmt::Debug {{",
@@ -107,7 +134,9 @@ where
         writeln!(buf, "}}").unwrap();
 
         // Implement the rpc traits for: `twirp::client::Client`
-        writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        if self.async_trait_shim {
+            writeln!(buf, "#[twirp::async_trait::async_trait]").unwrap();
+        }
         writeln!(
             buf,
             "impl {service_name}Client for twirp::client::Client {{",
