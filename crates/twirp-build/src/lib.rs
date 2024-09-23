@@ -54,7 +54,7 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
         for m in &service.methods {
             writeln!(
                 buf,
-                "    fn {}(&self, ctx: twirp::Context, req: {}) -> impl std::future::Future<Result<{}, twirp::TwirpErrorResponse>> + Send + Sync;",
+                "    fn {}(&self, ctx: twirp::Context, req: {}) -> impl std::future::Future<Output = Result<{}, twirp::TwirpErrorResponse>> + Send + Sync;",
                 m.name, m.input_type, m.output_type,
             )
             .unwrap();
@@ -71,7 +71,7 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
         for m in &service.methods {
             writeln!(
                 buf,
-                "    fn {}(&self, ctx: twirp::Context, req: {}) -> impl std::future::Future<Output=Result<{}, twirp::TwirpErrorResponse>> + Send + Sync {{",
+                "    fn {}(&self, ctx: twirp::Context, req: {}) -> impl std::future::Future<Output = Result<{}, twirp::TwirpErrorResponse>> + Send + Sync {{",
                 m.name, m.input_type, m.output_type,
             )
                 .unwrap();
@@ -126,7 +126,7 @@ where
             // Define: <METHOD>
             writeln!(
                 buf,
-                "    fn {}(&self, req: {}) -> impl std::future::Future<Result<{}, twirp::ClientError>> + Send + Sync;",
+                "    fn {}(&self, req: {}) -> impl std::future::Future<Output = Result<{}, twirp::ClientError>> + Send + Sync;",
                 m.name, m.input_type, m.output_type,
             )
             .unwrap();
@@ -146,7 +146,7 @@ where
             // Define the rpc `<METHOD>`
             writeln!(
                 buf,
-                "    fn {}(&self, req: {}) -> impl std::future::Future<Result<{}, twirp::ClientError>> + Send + Sync {{",
+                "    fn {}(&self, req: {}) -> impl std::future::Future<Output = Result<{}, twirp::ClientError>> + Send + Sync {{",
                 m.name, m.input_type, m.output_type,
             )
             .unwrap();
